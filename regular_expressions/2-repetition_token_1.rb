@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+#Check that an argument is passed and applies the Oniguruma regex
+if ARGV[0]
+    print ARGV[0].scan(/hb?tn/).join
+end
