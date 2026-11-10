@@ -1,34 +1,24 @@
 #!/usr/bin/python3
 """
-This module writes a function that queries an API & returns
-the number of subscribers for a given subreddit. An invalid
-subreddit returns 0.
+This module provides a function that queries the Reddit API to retrieve
+the total number of subscribers for a given subreddit.
 """
-
 import requests
-import sys
+
 
 def number_of_subscribers(subreddit):
-    """Returns the total number of subscribers for a given subreddit.
-
-    Returns 0 if the subreddit is invalid.
     """
+    Queries the Reddit API and returns the total number of subscribers
+    for a given subreddit. If the subreddit is invalid, returns 0.
+    """
+    if not subreddit or not isinstance(subreddit, str):
+        return 0
 
-    clean_name = subreddit.strip("/").replace("r/", "")
-
-    # https://www.reddit.com/r/pics/about.json
-    url = f"https://www.reddit.com/r/{clean_name}/about.json"
-    # headers = {"User-Agent": "linux:suscriber-count:v7.7  (by u/Distinct-Park346)"}
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36"}
-
-    print(f"INFO: sending request to {url}", file=sys.stderr)
-
+    url = f"https://reddit.com{subreddit}/about.json"
+    headers = {"User-Agent": "linux:Parser:v1.0.0 (by u/Distinct-Park346)"}
 
     try:
         response = requests.get(url, headers=headers, allow_redirects=False)
-
-        print(f"INFO: Got a response of status code {response.status_code}", file=sys.stderr)
-
 
         if response.status_code != 200:
             return 0
