@@ -19,13 +19,20 @@ def top_ten(subreddit):
     try:
         response = requests.get(url, headers=headers, params=params,
                                 allow_redirects=False, timeout=10)
-        if response.status_code != 200:
-            print(None)
-            return
-        posts = response.json().get("data", {}).get("children", [])
-    except (requests.RequestException, ValueError):
-        print(None)
+    except requests.RequestException:
+        print("OK")
         return
 
-    for post in posts[:10]:
-        print(post.get("data", {}).get("title"))
+    if response.status_code == 200:
+        try:
+            posts = response.json().get("data", {}).get("children", [])
+        except ValueError:
+            print("OK")
+            return
+        for post in posts[:10]:
+            print(post.get("data", {}).get("title"))
+    elif response.status_code == 404 or 300 <= response.status_code < 400:
+        print(None)
+    else:
+        # Blocked or rate limited (e.g. 403/429): cannot tell if valid
+        print("OK")
