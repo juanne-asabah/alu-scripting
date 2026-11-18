@@ -28,8 +28,9 @@ def recurse(subreddit, hot_list=[], after=None):
     children = data.get("children", [])
     after = data.get("after")
 
-    for post in children:
-        hot_list.append(post.get("data", {}).get("title"))
+    hot_list.extend(
+        list(map(lambda post: post.get("data", {}).get("title"), children))
+    )
 
     if after is not None:
         return recurse(subreddit, hot_list, after)
