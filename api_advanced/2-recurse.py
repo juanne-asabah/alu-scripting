@@ -6,16 +6,19 @@ the titles of all hot articles for a given subreddit.
 import requests
 
 
-def recurse(subreddit, hot_list=[], after=None):
-    """Returns a list of titles of all hot posts for a given subreddit."""
-    url = "https://reddit.com{}/hot.json".format(subreddit)
+def recurse(subreddit, hot_list=None, after=None):
+    """Returns a list of titles of all hot posts for a given subreddit.
+
+    Returns None if the subreddit is not valid.
+    """
+    if hot_list is None:
+        hot_list = []
+
+    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
     headers = {
         "User-Agent": "linux:0x16.api.advanced:v1.0.0 (by /u/alu_student)"
     }
-    params = {
-        "after": after,
-        "limit": 100
-    }
+    params = {"after": after, "limit": 100}
 
     response = requests.get(
         url, headers=headers, params=params, allow_redirects=False
@@ -25,13 +28,10 @@ def recurse(subreddit, hot_list=[], after=None):
         return None
 
     data = response.json().get("data", {})
-    children = data.get("children", [])
+    for post in data.get("children", []):
+        hot_list.append(post.get("data", {}).get("title"))
+
     after = data.get("after")
-
-    hot_list.extend(
-        list(map(lambda post: post.get("data", {}).get("title"), children))
-    )
-
     if after is not None:
         return recurse(subreddit, hot_list, after)
 
