@@ -1,29 +1,37 @@
 #!/usr/bin/python3
-"""Recursively queries the Reddit API and returns all hot article titles."""
+"""
+Queries the Reddit API recursively and returns a list containing
+the titles of all hot articles for a given subreddit.
+"""
 import requests
 
 
 def recurse(subreddit, hot_list=[], after=None):
-    """Returns a list of titles of all hot articles for a given subreddit."""
-    url = f"https://reddit.com{subreddit}/hot.json"
-    headers = {"User-Agent": "linux:alu.api.advanced:v1.0.0 (by /u/student)"}
-    params = {"limit": 100}
-    if after:
-        params["after"] = after
+    """Returns a list of titles of all hot posts for a given subreddit."""
+    url = "https://reddit.com{}/hot.json".format(subreddit)
+    headers = {
+        "User-Agent": "linux:0x16.api.advanced:v1.0.0 (by /u/alu_student)"
+    }
+    params = {
+        "after": after,
+        "limit": 100
+    }
 
     response = requests.get(
         url, headers=headers, params=params, allow_redirects=False
     )
+
     if response.status_code != 200:
         return None
 
     data = response.json().get("data", {})
     children = data.get("children", [])
+    after = data.get("after")
+
     for post in children:
         hot_list.append(post.get("data", {}).get("title"))
 
-    next_after = data.get("after")
-    if next_after is None:
-        return hot_list
+    if after is not None:
+        return recurse(subreddit, hot_list, after)
 
-    return recurse(subreddit, hot_list, next_after)
+    return hot_list
