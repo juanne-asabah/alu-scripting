@@ -1,51 +1,55 @@
 #!/usr/bin/python3
-"""Recursively counts and sorts keyword occurrences in hot Reddit titles."""
+"""
+Recursively queries the Reddit API, parses the titles of all hot articles,
+and prints a sorted count of the given keywords (case-insensitive).
+"""
 import requests
 
 
-def count_words(subreddit, word_list, after=None, counts=None, multipliers=None):
-    """Queries Reddit API recursively and prints sorted keyword counts."""
+def count_words(subreddit, word_list, after=None, counts=None):
+    """Prints a sorted count of keywords found in a subreddit's hot titles.
+
+    Words are matched case-insensitively and must be delimited by spaces
+    (so "java." does not count as "java"). Duplicates in word_list add up.
+    Prints nothing if the subreddit is invalid or no keywords match.
+    """
     if counts is None:
         counts = {}
-        multipliers = {}
-        for word in word_list:
-            lower_w = word.lower()
-            counts[lower_w] = 0
-            multipliers[lower_w] = multipliers.get(lower_w, 0) + 1
 
-    url = f"https://reddit.com{subreddit}/hot.json"
-    headers = {"User-Agent": "linux:alu.api.advanced:v1.0.0 (by /u/student)"}
-    params = {"limit": 100}
-    if after:
-        params["after"] = after
+    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
+    headers = {
+        "User-Agent": "linux:0x16.api.advanced:v1.0.0 (by /u/alu_student)"
+    }
+    params = {"after": after, "limit": 100}
 
-    response = requests.get(
-        url, headers=headers, params=params, allow_redirects=False
-    )
-    if response.status_code != 200:
+    try:
+        response = requests.get(
+            url, headers=headers, params=params, allow_redirects=False,
+            timeout=10
+        )
+        if response.status_code != 200:
+            return
+        data = response.json().get("data", {})
+    except (requests.RequestException, ValueError):
         return
 
-    data = response.json().get("data", {})
-    children = data.get("children", [])
+    wanted = set(word.lower() for word in word_list)
+    for post in data.get("children", []):
+        title = post.get("data", {}).get("title", "")
+        for token in title.lower().split():
+            if token in wanted:
+                counts[token] = counts.get(token, 0) + 1
 
-    for post in children:
-        title_words = post.get("data", {}).get("title", "").lower().split()
-        for token in title_words:
-            if token in counts:
-                counts[token] += 1
+    after = data.get("after")
+    if after is not None:
+        return count_words(subreddit, word_list, after, counts)
 
-    next_after = data.get("after")
-    if next_after is not None:
-        return count_words(subreddit, word_list, next_after, counts, multipliers)
+    # Last page reached: apply duplicate multipliers, sort and print
+    multiplier = {}
+    for word in word_list:
+        multiplier[word.lower()] = multiplier.get(word.lower(), 0) + 1
 
-    final_counts = {
-        word: count * multipliers[word]
-        for word, count in counts.items()
-        if count > 0
-    }
-
-    sorted_words = sorted(
-        final_counts.items(), key=lambda item: (-item[1], item[0])
-    )
-    for word, total in sorted_words:
-        print(f"{word}: {total}")
+    results = [(word, total * multiplier[word])
+               for word, total in counts.items() if total > 0]
+    for word, total in sorted(results, key=lambda item: (-item[1], item[0])):
+        print("{}: {}".format(word, total))
