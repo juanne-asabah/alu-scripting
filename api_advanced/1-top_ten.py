@@ -13,13 +13,12 @@ def top_ten(subreddit):
         return
 
     url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
-    headers = {"User-Agent": "linux:top_ten:v1.0 (by /u/your_username)"}
+    headers = {"User-Agent": "linux:top_ten:v1.0 (by /u/alu_student)"}
     params = {"limit": 10}
 
     try:
         response = requests.get(url, headers=headers, params=params,
                                 allow_redirects=False, timeout=10)
-        # Invalid subreddits redirect (3xx) to search results or return 404
         if response.status_code != 200:
             print(None)
             return
