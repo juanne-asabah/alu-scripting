@@ -1,10 +1,6 @@
 #!/usr/bin/python3
 """Query the Reddit API for the number of subscribers to a subreddit."""
 import requests
-
-
-
-
 def number_of_subscribers(subreddit):
     """Return the total subscribers of a subreddit, or 0 if it is invalid."""
     url = "https://www.reddit.com/r/{}/about.json".format(subreddit)
